@@ -3,10 +3,14 @@ package health
 import (
 	"fmt"
 	"net/http"
+	"time"
 )
 
 func Check(service Service) error {
-	resp, err := http.Get(service.URL)
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+	resp, err := client.Get(service.URL)
 	if err != nil {
 		return err
 	}
