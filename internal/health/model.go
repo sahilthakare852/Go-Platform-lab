@@ -8,3 +8,8 @@ type Service struct {
 type ServiceConfig struct {
 	Services []Service `json:"services"`
 }
+
+type HealthCheckResult struct {
+	Service Service
+	Error   error
+}

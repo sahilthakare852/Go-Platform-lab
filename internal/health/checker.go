@@ -25,18 +25,30 @@ func Check(service Service) error {
 
 func CheckAll(services []Service) {
 	var wg sync.WaitGroup
+	results := make(chan HealthCheckResult)
 	for _, service := range services {
 		wg.Add(1)
 		go func(service Service) {
 			defer wg.Done()
-			fmt.Printf("Checking %s...\n", service.Name)
+			//fmt.Printf("Checking %s...\n", service.Name)
 			err := Check(service)
-			if err == nil {
-				fmt.Printf("PASSED\n")
-			} else {
-				fmt.Printf("FAILED:  %v\n", err)
-			}
+			//if err == nil {
+			//	fmt.Printf("PASSED\n")
+			//} else {
+			//	fmt.Printf("FAILED:  %v\n", err)
+			//}
+			results <- HealthCheckResult{Service: service, Error: err}
 		}(service)
 	}
-	wg.Wait()
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+	for result := range results {
+		if result.Error != nil {
+			fmt.Printf("%s Failed: %v\n", result.Service.Name, result.Error)
+		} else {
+			fmt.Printf("%s Passed\n", result.Service.Name)
+		}
+	}
 }
