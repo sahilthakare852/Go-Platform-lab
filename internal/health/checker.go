@@ -8,11 +8,15 @@ import (
 	"time"
 )
 
-var client = &http.Client{
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
+var client HTTPClient = &http.Client{
 	Timeout: 5 * time.Second,
 }
 
-func Check(ctx context.Context, service Service) error {
+func Check(ctx context.Context, service Service, client HTTPClient) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, service.URL, nil)
 	if err != nil {
 		return err
@@ -28,7 +32,7 @@ func Check(ctx context.Context, service Service) error {
 	return nil
 }
 
-func CheckAll(ctx context.Context, services []Service) {
+func CheckAll(ctx context.Context, services []Service, client HTTPClient) {
 	var wg sync.WaitGroup
 	results := make(chan HealthCheckResult)
 	for _, service := range services {
@@ -36,7 +40,7 @@ func CheckAll(ctx context.Context, services []Service) {
 		go func(service Service) {
 			defer wg.Done()
 			//fmt.Printf("Checking %s...\n", service.Name)
-			err := Check(ctx, service)
+			err := Check(ctx, service, client)
 			//if err == nil {
 			//	fmt.Printf("PASSED\n")
 			//} else {
