@@ -10,7 +10,11 @@
         },
         {
             "name": "OpenAI",
-            "url": "https://OpenAI.com"     
+            "url": "https://openai.com"     
+        },
+           {
+            "name": "Slow API",
+            "url": "https://httpbin.org/delay/10"     
         }
     ]
 }

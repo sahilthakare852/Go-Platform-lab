@@ -1,6 +1,7 @@
 package health
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"sync"
@@ -11,8 +12,12 @@ var client = &http.Client{
 	Timeout: 5 * time.Second,
 }
 
-func Check(service Service) error {
-	resp, err := client.Get(service.URL)
+func Check(ctx context.Context, service Service) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, service.URL, nil)
+	if err != nil {
+		return err
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -23,7 +28,7 @@ func Check(service Service) error {
 	return nil
 }
 
-func CheckAll(services []Service) {
+func CheckAll(ctx context.Context, services []Service) {
 	var wg sync.WaitGroup
 	results := make(chan HealthCheckResult)
 	for _, service := range services {
@@ -31,7 +36,7 @@ func CheckAll(services []Service) {
 		go func(service Service) {
 			defer wg.Done()
 			//fmt.Printf("Checking %s...\n", service.Name)
-			err := Check(service)
+			err := Check(ctx, service)
 			//if err == nil {
 			//	fmt.Printf("PASSED\n")
 			//} else {
